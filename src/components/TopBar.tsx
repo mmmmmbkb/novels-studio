@@ -12,7 +12,7 @@ export default function TopBar() {
   useEffect(() => {
     if (user?.role !== 'admin') { setPending(0); return; }
     let alive = true;
-    getDB().listMembershipRequests()
+    getDB().listMembershipRequestsAdmin()
       .then((reqs) => { if (alive) setPending(reqs.filter((r) => r.status === 'pending').length); })
       .catch(() => { if (alive) setPending(0); });
     return () => { alive = false; };

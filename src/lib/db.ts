@@ -165,11 +165,19 @@ class LocalDB {
   async listMembershipRequests(): Promise<MembershipRequest[]> {
     return this.requests().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
+  /** نسخة الأدمن في الوضع المحلي: نفس القائمة (لا RLS محليًا). */
+  async listMembershipRequestsAdmin(): Promise<MembershipRequest[]> {
+    return this.listMembershipRequests();
+  }
   async reviewMembership(id: string, approved: boolean, reviewer: string): Promise<void> {
     const all = this.requests(); const i = all.findIndex((r) => r.id === id); if (i < 0) return;
     all[i] = { ...all[i], status: approved ? 'approved' : 'rejected', reviewedBy: reviewer, reviewedAt: now() };
     write('ns_requests', all);
     await this.updateProfile(all[i].userId, { membershipStatus: approved ? 'approved' : 'rejected' });
+  }
+  /** نسخة الأدمن في الوضع المحلي: نفس المراجعة (لا RLS محليًا). */
+  async reviewMembershipAdmin(id: string, approved: boolean, reviewer: string): Promise<void> {
+    return this.reviewMembership(id, approved, reviewer);
   }
   async uploadCover(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -178,6 +186,24 @@ class LocalDB {
       r.onerror = () => reject(new Error('تعذّرت قراءة الصورة'));
       r.readAsDataURL(file);
     });
+  }
+  // ── إدارة الأدمن (الوضع المحلي) ──
+  async listAdminUsers(): Promise<Profile[]> {
+    return this.users().map((u) => { const { passwordHash: _h, ...pub } = u; return pub; });
+  }
+  async setUserRole(email: string, role: 'admin' | 'member'): Promise<void> {
+    const em = email.trim().toLowerCase();
+    const users = this.users();
+    const i = users.findIndex((u) => u.email === em);
+    if (i < 0) throw new Error('لا يوجد حساب مسجّل بهذا الإيميل في الموقع');
+    if (role === 'member' && em === ADMIN_EMAIL) throw new Error('لا يمكن إزالة دور الأدمن عن الأدمن الرئيسي');
+    const me = await this.getSession();
+    if (role === 'member' && me && me.email === em) throw new Error('لا يمكنك إزالة دور الأدمن عن نفسك');
+    users[i] = { ...users[i], role, membershipStatus: role === 'admin' ? 'approved' : users[i].membershipStatus };
+    this.saveUsers(users);
+  }
+  async claimAdminInvite(_code: string): Promise<void> {
+    throw new Error('الدعوة السرية تعمل في وضع السيرفر فقط');
   }
 }
 
@@ -358,6 +384,24 @@ class SupabaseDB {
     const { data } = await sb.from('membership_requests').update({ status: approved ? 'approved' : 'rejected', reviewed_by: reviewer, reviewed_at: new Date().toISOString() }).eq('id', id).select().single();
     if (data) await sb.from('profiles').update({ membership_status: approved ? 'approved' : 'rejected' }).eq('id', String((data as Record<string, unknown>).user_id));
   }
+  // ── طلبات العضوية للأدمن (عبر routes الخادم — تتجاوز RLS بأمان) ──
+  /** كل الطلبات للأدمن عبر GET /api/admin/requests (service role). */
+  async listMembershipRequestsAdmin(): Promise<MembershipRequest[]> {
+    const res = await fetch('/api/admin/requests', { headers: { Authorization: `Bearer ${await this.authToken()}` } });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'تعذّر جلب طلبات العضوية');
+    return (j.requests || []) as MembershipRequest[];
+  }
+  /** مراجعة طلب للأدمن عبر POST /api/admin/review (service role). */
+  async reviewMembershipAdmin(id: string, approved: boolean, reviewer: string): Promise<void> {
+    const res = await fetch('/api/admin/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await this.authToken()}` },
+      body: JSON.stringify({ id, approved, reviewer }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'تعذّرت مراجعة الطلب');
+  }
   async uploadCover(file: File): Promise<string> {
     const sb = this.sb();
     const path = `${uid()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -365,6 +409,42 @@ class SupabaseDB {
     if (error) throw new Error(`رفع الغلاف فشل: ${error.message} — تأكد من إنشاء Bucket باسم covers في Supabase Storage وجعله Public للقراءة.`);
     const { data } = sb.storage.from('covers').getPublicUrl(path);
     return data.publicUrl;
+  }
+  // ── إدارة الأدمن (عبر routes الخادم — تتجاوز RLS بأمان) ──
+  private async authToken(): Promise<string> {
+    const { data } = await this.sb().auth.getSession();
+    const t = data.session?.access_token;
+    if (!t) throw new Error('سجّل دخول أولًا');
+    return t;
+  }
+  async listAdminUsers(): Promise<Profile[]> {
+    const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${await this.authToken()}` } });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'تعذّر جلب المستخدمين');
+    return (j.users || []).map((u: Record<string, unknown>) => ({
+      id: String(u.id), email: String(u.email || ''), name: String(u.name || ''),
+      membershipStatus: (u.membershipStatus as MembershipStatus) || 'none',
+      role: (u.role as 'admin' | 'member') || 'member', points: 0, createdAt: '',
+    }));
+  }
+  async setUserRole(email: string, role: 'admin' | 'member'): Promise<void> {
+    const res = await fetch('/api/admin/set-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await this.authToken()}` },
+      body: JSON.stringify({ email, role }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'تعذّر تغيير الدور');
+  }
+  /** دعوة أدمن سرية: يرسل الكود من رابط ?invite= إلى الخادم. */
+  async claimAdminInvite(code: string): Promise<void> {
+    const res = await fetch('/api/admin/claim-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await this.authToken()}` },
+      body: JSON.stringify({ code }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'الرابط غير صحيح');
   }
 }
 

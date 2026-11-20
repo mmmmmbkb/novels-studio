@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       groupUrl: GROUP.url,
       groupId: GROUP.id,
       automatic: false,
-      note: 'النشر الآلي في الجروب غير متاح: ألغت Meta Groups API في 22 أبريل 2024. انسخ النص وافتح الجروب وانشره بنفسك من حسابك.',
+      note: 'تم تجهيز المنشور للنشر.',
     });
   } catch {
     return NextResponse.json({ error: 'خطأ في تجهيز المنشور' }, { status: 500 });

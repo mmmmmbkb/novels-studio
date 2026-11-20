@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useAuth } from './AuthProvider';
 
 export default function TopBar() {
-  const { user, loading, signOut, supabaseMode } = useAuth();
+  const { user, loading, signOut } = useAuth();
   return (
     <header className="topbar">
       <Link href="/" className="logo">📖 استوديو الروايات<small>MIRAX NOVELS — ميراكس للروايات</small></Link>
@@ -14,9 +14,6 @@ export default function TopBar() {
         {!loading && !user && <Link href="/auth">تسجيل الدخول</Link>}
         {user && <button onClick={signOut}>خروج ({user.name})</button>}
       </nav>
-      <div className="muted" style={{ width: '100%' }}>
-        {supabaseMode ? '🟢 الوضع الحقيقي: Supabase متصل' : '🟡 الوضع المحلي التجريبي: اضبط متغيرات Supabase للتفعيل الحقيقي متعدد المستخدمين'}
-      </div>
     </header>
   );
 }

@@ -34,15 +34,19 @@ function StudioInner() {
   const [fbUrl, setFbUrl] = useState(''); const [fbNote, setFbNote] = useState('');
   // publish
   const [publishText, setPublishText] = useState(''); const [fbPostUrl, setFbPostUrl] = useState('');
+  // تبويبات الاستوديو (على طراز نسخة Muse): مكتبة / نقاط / مجموعة
+  const [tab, setTab] = useState<'library' | 'points' | 'group'>('library');
   // إضافة كروم «ناشر ميراكس»: النشر يتم بحساب المستخدم الناشر نفسه فقط،
   // من جلسة فيسبوك المسجّل دخول فيها في متصفحه هو — بلا توكن مشترك
   // وبلا نشر بالنيابة عن الأدمن. الإضافة تملأ النص فقط، والمستخدم
   // يضغط «نشر» بنفسه داخل فيسبوك.
   const [extInstalled, setExtInstalled] = useState(false);
+  // حالة النشر الظاهرة: جاري النشر / تم النشر
+  const [publishing, setPublishing] = useState(false);
   const [extStatus, setExtStatus] = useState('');
   useEffect(() => {
     const onReady = () => setExtInstalled(true);
-    const onStatus = (e: Event) => { const d = (e as CustomEvent).detail || {}; setExtStatus(d.message || d.status || ''); };
+    const onStatus = (e: Event) => { const d = (e as CustomEvent).detail || {}; setExtStatus(d.message || d.status || ''); setPublishing(false); };
     window.addEventListener('novels-studio:extension-ready', onReady);
     window.addEventListener('novels-studio:extension-status', onStatus);
     if (document.documentElement.hasAttribute('data-novels-extension')) setExtInstalled(true);
@@ -103,29 +107,29 @@ function StudioInner() {
   }
 
   async function preparePublish() {
-    if (!chapter || !selected || !user) return; setBusy(true); setErr('');
+    if (!chapter || !selected || !user) return; setBusy(true); setPublishing(true); setErr('');
     try {
       const res = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ novelTitle: selected.title, chapterTitle: chapter.title, authorName: user.name, content: draft || chapter.content, novelId: selected.id, chapterId: chapter.id }) });
       const data = await res.json();
       setPublishText(data.preparedText || '');
       setMsg(data.note || '');
       return data.preparedText || '';
-    } catch { setErr('تعذّر تجهيز المنشور'); return ''; } finally { setBusy(false); }
+    } catch { setErr('تعذّر تجهيز المنشور'); return ''; } finally { setBusy(false); setPublishing(false); }
   }
 
   // النشر عبر إضافة كروم: يرسل النص المنسق إلى الإضافة، فتفتح تبويب الجروب
   // وتملأ النص — ثم يضغط المستخدم «نشر» بنفسه داخل فيسبوك من حسابه هو.
   async function publishViaExtension() {
     if (!chapter || !selected || !user) return;
-    setErr(''); setExtStatus('جارٍ تجهيز النص وإرساله إلى الإضافة…');
+    setErr(''); setPublishing(true); setExtStatus('جارٍ تجهيز النص وإرساله إلى الإضافة…');
     const text = publishText || (await preparePublish());
     if (!text) { setExtStatus(''); return; }
     window.dispatchEvent(new CustomEvent('novels-studio:publish-request', { detail: { text, novelTitle: selected.title, chapterTitle: chapter.title, authorName: user.name, chapterId: chapter.id, novelId: selected.id } }));
     // إذا لم ترد الإضافة (غير مثبتة)، أظهر تعليمات التثبيت بعد مهلة قصيرة.
     setTimeout(() => {
       if (!document.documentElement.hasAttribute('data-novels-extension')) {
-        setExtInstalled(false);
-        setExtStatus('الإضافة غير مثبتة في هذا المتصفح. ثبّتها من مجلد extension/ في المشروع: chrome://extensions ← وضع المطوّر ← Load unpacked ← مجلد extension/ — ثم أعد تحميل هذه الصفحة. ملاحظة: الإضافة للكمبيوتر فقط ولا تعمل على أندرويد.');
+        setExtInstalled(false); setPublishing(false);
+        setExtStatus('الإضافة غير مثبتة في هذا المتصفح. ثبّتها من مجلد extension/ في المشروع، أو استخدم سكربت Tampermonkey على أندرويد من مجلد extension/android/ — ثم أعد تحميل الصفحة.');
       }
     }, 1500);
   }
@@ -135,7 +139,7 @@ function StudioInner() {
     try {
       const updated = await getDB().publishChapter(chapter.id, fbPostUrl || undefined);
       setChapter(updated); setChapters(await getDB().listChapters(updated.novelId));
-      setMsg(`✅ تم تسجيل النشر (+${POINTS.PUBLISH} نقاط). تذكير: النشر الفعلي في الجروب يتم يدويًا من حسابك على فيسبوك.`);
+      setMsg(`✅ تم النشر (+${POINTS.PUBLISH} نقاط).`);
       await load();
     } catch (e2) { setErr(e2 instanceof Error ? e2.message : 'خطأ'); } finally { setBusy(false); }
   }
@@ -168,7 +172,7 @@ function StudioInner() {
   }
 
   if (loading) return <main className="container"><p>جاري التحميل...</p></main>;
-  if (!user) return <main className="container"><div className="card"><h1>سجّل دخول أولًا</h1><p>الاستوديو للأعضاء فقط. أنشئ حسابًا أو سجّل دخولك.</p><Link href="/auth"><button className="btn">تسجيل الدخول / إنشاء حساب</button></Link></div></main>;
+  if (!user) return <main className="container"><div className="card" style={{ textAlign: 'center', padding: 36 }}><h1>📖 استوديو الروايات</h1><p>الدخول للأعضاء فقط — تحقق من عضويتك في جروب ميراكس لفتح الاستوديو.</p><Link href="/auth"><button className="btn gold">تحقق من عضويتي وادخل</button></Link></div></main>;
 
   const lvl = levelFor(user.points);
   const gated = user.role !== 'admin' && user.membershipStatus !== 'approved';
@@ -195,9 +199,6 @@ function StudioInner() {
           ) : user.membershipStatus === 'rejected' ? (
             <div className="alert red">❌ رُفض طلب التحقق السابق. تأكد أنك عضو فعلًا في الجروب ثم أعد إرسال الطلب برابط بروفايل صحيح.</div>
           ) : null}
-          <div className="alert">
-            <strong>لماذا التحقق يدوي؟</strong> ألغت Meta واجهة Groups API في 22 أبريل 2024، فلا يمكن لأي تطبيق التحقق تلقائيًا من عضوية الجروب. الأدمن (محمود) يراجع رابط بروفايلك ويتأكد من عضويتك في الجروب ثم يوافق من لوحة التحكم.
-          </div>
           <form onSubmit={submitMembership}>
             <div className="field"><label>رابط بروفايل فيسبوك الخاص بك</label><input value={fbUrl} onChange={(e) => setFbUrl(e.target.value)} required dir="ltr" style={{ textAlign: 'left' }} placeholder="https://www.facebook.com/your.profile" /></div>
             <div className="field"><label>ملاحظة للأدمن (اختياري)</label><input value={fbNote} onChange={(e) => setFbNote(e.target.value)} placeholder="مثال: أنا عضو في الجروب منذ 2024" /></div>
@@ -208,6 +209,13 @@ function StudioInner() {
 
       {!gated && (
         <>
+          <div className="row" style={{ marginBottom: 16 }}>
+            <button className="btn ghost small" onClick={() => setTab('library')} style={tab === 'library' ? { borderColor: '#e8b64c' } : {}}>📚 المكتبة</button>
+            <button className="btn ghost small" onClick={() => setTab('points')} style={tab === 'points' ? { borderColor: '#e8b64c' } : {}}>⭐ نقاطي</button>
+            <button className="btn ghost small" onClick={() => setTab('group')} style={tab === 'group' ? { borderColor: '#e8b64c' } : {}}>👥 المجموعة</button>
+          </div>
+          {tab === 'library' && (
+          <>
           <div className="card">
             <h2>➕ رواية جديدة</h2>
             <form onSubmit={createNovel}>
@@ -251,17 +259,22 @@ function StudioInner() {
                     <button className="btn gold" onClick={preparePublish} disabled={busy}>📣 تجهيز النشر في الجروب</button>
                     <button className="btn" onClick={publishViaExtension} disabled={busy} title="النشر يتم بحسابك أنت، من جلسة فيسبوك في متصفحك — بلا توكن مشترك وبلا نشر بالنيابة عن الأدمن">🚀 انشر عبر الإضافة (بحسابك أنت)</button>
                   </div>
+                  <div className="row" style={{ marginTop: 8 }}>
+                    {publishing && <span className="badge gold">⏳ جاري النشر…</span>}
+                    {!publishing && chapter.published && <span className="badge green">✅ تم النشر</span>}
+                    {!publishing && !chapter.published && <span className="badge">لم يُنشر بعد</span>}
+                  </div>
                   {extStatus && <p className="muted" style={{ marginTop: 8 }}>🧩 الإضافة: {extStatus}</p>}
                   {!extInstalled && (
                     <div className="alert" style={{ marginTop: 8 }}>
-                      <strong>إضافة كروم «ناشر ميراكس» غير مثبتة هنا.</strong> للنشر بضغطة واحدة من حسابك: ثبّت الإضافة من مجلد <code>extension/</code> في المشروع — <code>chrome://extensions</code> ← وضع المطوّر ← Load unpacked ← مجلد <code>extension/</code> — ثم أعد تحميل الصفحة. الإضافة للكمبيوتر فقط ولا تعمل على كروم أندرويد. <strong>على أندرويد:</strong> استخدم Firefox + سكربت Tampermonkey من مجلد <code>extension/android/</code> (الطريقة الموصى بها)، أو نسخة Firefox من مجلد <code>extension/firefox/</code> — التفاصيل في <code>extension/android/README.md</code>. بدونها يمكنك النشر يدويًا بالنسخ من الأسفل.
+                      الإضافة غير مثبتة هنا. ثبّتها من مجلد <code>extension/</code> في المشروع، أو استخدم سكربت Tampermonkey على أندرويد من مجلد <code>extension/android/</code> — ثم أعد تحميل الصفحة. ويمكنك النشر يدويًا بالنسخ من الأسفل.
                     </div>
                   )}
 
                   {publishText && (
                     <div className="card" style={{ marginTop: 14, background: '#251a44' }}>
                       <h3>📣 منشور جاهز للنشر في ميراكس</h3>
-                      <p>⚠️ النشر الآلي عبر API غير متاح (ألغته Meta في 2024). للنشر بضغطة واحدة استخدم زر «🚀 انشر عبر الإضافة (بحسابك أنت)» أعلاه — الإضافة تفتح الجروب وتملأ النص، وتضغط «نشر» بنفسك داخل فيسبوك <strong>من حسابك أنت</strong>، وليس بحساب الأدمن. أو انسخ النص يدويًا والصقه كمنشور جديد من حسابك، ثم الصق رابط المنشور هنا واضغط «تأكيد النشر» لتسجيل +{POINTS.PUBLISH} نقطة.</p>
+                      <p>انشر النص من حسابك أنت، ثم الصق رابط المنشور هنا واضغط «تأكيد النشر» لتسجيل +{POINTS.PUBLISH} نقطة.</p>
                       <textarea value={publishText} readOnly rows={8} style={{ width: '100%', background: '#120b26', color: '#f3efff', borderRadius: 10, padding: 12 }} />
                       <div className="row" style={{ marginTop: 10 }}>
                         <button className="btn small" onClick={() => navigator.clipboard.writeText(publishText)}>📋 نسخ النص</button>
@@ -274,7 +287,7 @@ function StudioInner() {
 
                   {chapter.published && (
                     <div className="card" style={{ marginTop: 14 }}>
-                      <h3>🔄 مزامنة التفاعلات (يدوية — لأن Groups API أُلغي)</h3>
+                      <h3>🔄 مزامنة التفاعلات</h3>
                       <p className="muted">افتح منشور الفصل في الجروب، واكتب عدد التفاعلات والتعليقات الحالي. تُحتسب فقط الزيادة عن آخر مزامنة: +{POINTS.REACTION} لكل تفاعل جديد، +{POINTS.COMMENT} لكل تعليق جديد.</p>
                       <div className="row">
                         <input type="number" min={0} value={syncR} onChange={(e) => setSyncR(e.target.value)} placeholder="التفاعلات" style={{ width: 130, padding: 10, borderRadius: 10, background: '#120b26', color: '#fff', border: '1px solid #444' }} />
@@ -289,14 +302,27 @@ function StudioInner() {
             </div>
           )}
 
+          </>)}
+          {tab === 'points' && (
           <div className="card">
             <h2>⭐ سجل نقاطك</h2>
+            <p className="muted">القواعد: نشر فصل +50 · فصل جديد +10 · +5 لكل 500 كلمة · +2 لكل تفاعل · +5 لكل تعليق.</p>
             {events.length === 0 ? <p className="muted">لا نقاط بعد — اكتب فصلًا جديدًا أو انشر فصلًا.</p> : (
               <table><thead><tr><th>النقاط</th><th>السبب</th><th>التاريخ</th></tr></thead><tbody>
                 {events.slice(0, 30).map((e) => <tr key={e.id}><td>+{e.amount}</td><td>{e.label}</td><td className="muted">{new Date(e.createdAt).toLocaleString('ar-EG')}</td></tr>)}
               </tbody></table>
             )}
           </div>
+          )}
+          {tab === 'group' && (
+          <div className="card">
+            <h2>👥 جروب ميراكس</h2>
+            <p>مجموعة <a href={GROUP.url} target="_blank" rel="noreferrer">{GROUP.name}</a> — {GROUP.privacy}، {GROUP.membersApprox} عضو.</p>
+            <p>حالة عضويتك: {user.role === 'admin' ? '🛡️ أنت أدمن الجروب' : user.membershipStatus === 'approved' ? '✅ عضويتك معتمدة' : user.membershipStatus === 'pending' ? '⏳ بانتظار موافقة الإدارة' : user.membershipStatus === 'rejected' ? '❌ رُفض الطلب' : 'لم ترسل طلب تحقق بعد'}</p>
+            {selected && chapter && <p>الفصل الحالي: {chapter.title} — {chapter.published ? '✅ تم النشر' : 'لم يُنشر بعد'}</p>}
+            <div className="row"><a href={GROUP.url} target="_blank" rel="noreferrer"><button className="btn gold small" type="button">فتح الجروب ↗</button></a></div>
+          </div>
+          )}
         </>
       )}
     </main>

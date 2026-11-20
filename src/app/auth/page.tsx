@@ -7,7 +7,7 @@ import { getDB, isSupabaseMode } from '@/lib/db';
 
 function AuthForm() {
   const router = useRouter();
-  const { refresh, supabaseMode } = useAuth();
+  const { refresh } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ function AuthForm() {
     setError(''); setBusy(true);
     try {
       if (!isSupabaseMode()) {
-        throw new Error('تسجيل الدخول بفيسبوك يحتاج الوضع الحقيقي: اضبط NEXT_PUBLIC_SUPABASE_URL وفعّل Facebook Provider في Supabase (انظر README القسم 4). حاليًا يمكنك التسجيل بالإيميل ثم ربط بروفايل فيسبوك من صفحة التحقق.');
+        throw new Error('تسجيل الدخول بفيسبوك غير متاح حاليًا. سجّل بالإيميل ثم اربط بروفايل فيسبوك من الاستوديو.');
       }
       await getDB().signInWithFacebook();
     } catch (err) { setError(err instanceof Error ? err.message : 'حدث خطأ'); } finally { setBusy(false); }
@@ -55,16 +55,16 @@ function AuthForm() {
         </form>
         <div style={{ textAlign: 'center', margin: '14px 0' }} className="muted">— أو —</div>
         <button className="btn ghost" onClick={facebookLogin} disabled={busy} style={{ width: '100%' }}>
-          {supabaseMode ? '🔵 المتابعة بحساب فيسبوك' : '🔵 المتابعة بحساب فيسبوك (يحتاج Supabase — انظر الملاحظة)'}
+          🔵 المتابعة بحساب فيسبوك
         </button>
         <p style={{ textAlign: 'center', marginTop: 16 }}>
           <button className="btn ghost small" onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
             {mode === 'signup' ? 'عندك حساب؟ سجّل دخول' : 'جديد هنا؟ أنشئ حسابًا'}
           </button>
         </p>
-        <div className="alert" style={{ marginTop: 16 }}>
-          بعد إنشاء الحساب ستحتاج <strong>التحقق من عضوية جروب ميراكس</strong>: اربط رابط بروفايل فيسبوك الخاص بك من داخل الاستوديو، وسيوافق الأدمن على طلبك يدويًا — لأن فيسبوك ألغى Groups API في 2024 ولا يوجد تحقق تلقائي من العضوية.
-        </div>
+        <p className="muted" style={{ textAlign: 'center', marginTop: 16 }}>
+          بعد إنشاء الحساب، اربط رابط بروفايل فيسبوك من داخل الاستوديو وانتظر موافقة الأدمن.
+        </p>
       </div>
     </main>
   );

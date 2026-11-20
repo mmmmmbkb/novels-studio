@@ -49,6 +49,16 @@ table { width: 100%; border-collapse: collapse; }
 td, th { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: right; font-size: 14px; }
 .progress { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; }
 .progress > div { height: 100%; background: linear-gradient(90deg, var(--gold), var(--violet)); }
+@media (max-width: 600px) {
+  .container { padding: 16px 12px 64px; }
+  .topbar { padding: 12px; gap: 8px; }
+  .logo { font-size: 19px; }
+  .nav a, .nav button { padding: 7px 10px; font-size: 13px; }
+  .btn { padding: 11px 16px; font-size: 15px; }
+  .card { padding: 16px; }
+  .editor { min-height: 320px; padding: 16px; font-size: 17px; }
+  table { display: block; overflow-x: auto; }
+}
 @media print {
   body { background: #fff; color: #000; }
   .topbar, .no-print { display: none !important; }

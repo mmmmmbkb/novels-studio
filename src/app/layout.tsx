@@ -1,9 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'استوديو الروايات | MIRAX NOVELS',
-  description: 'منصة احترافية لكتابة الروايات — حساب لكل كاتب، تحقق من عضوية جروب ميراكس، نشر الفصول، ونظام نقاط.',
+  description: 'استوديو الروايات — اكتب رواياتك وانشر فصولك في جروب ميراكس.',
+  manifest: '/manifest.webmanifest',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0f0a1e',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

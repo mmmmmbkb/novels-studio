@@ -30,9 +30,7 @@ function AdminInner() {
     <main className="container">
       <h1>🛡️ لوحة تحكم الأدمن — التحقق من العضوية</h1>
       <p>جروب: <a href={GROUP.url} target="_blank" rel="noreferrer">{GROUP.name}</a> — {GROUP.membersApprox} عضو</p>
-      <div className="alert">
-        <strong>كيف تتحقق؟</strong> افتح رابط بروفايل فيسبوك لكل طالب، وتأكد من أنه عضو فعلًا في الجروب (من صفحة الأعضاء في الجروب على فيسبوك — لا يوجد API يفعل هذا تلقائيًا بعد إلغاء Groups API في 2024). ثم وافق أو ارفض هنا. الموافقة تفتح الاستوديو لذلك المستخدم فورًا.
-      </div>
+      <p className="muted">افتح رابط بروفايل فيسبوك لكل طالب وتأكد من عضويته في الجروب، ثم وافق أو ارفض هنا. الموافقة تفتح الاستوديو لذلك المستخدم فورًا.</p>
       {msg && <div className="alert green">{msg}</div>}
       {err && <div className="alert red">{err}</div>}
       <h2>⏳ طلبات بانتظار المراجعة ({pending.length})</h2>

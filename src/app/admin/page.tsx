@@ -33,7 +33,10 @@ function AdminInner() {
       <p className="muted">افتح رابط بروفايل فيسبوك لكل طالب وتأكد من عضويته في الجروب، ثم وافق أو ارفض هنا. الموافقة تفتح الاستوديو لذلك المستخدم فورًا.</p>
       {msg && <div className="alert green">{msg}</div>}
       {err && <div className="alert red">{err}</div>}
-      <h2>⏳ طلبات بانتظار المراجعة ({pending.length})</h2>
+      <div className="space" style={{ alignItems: 'center' }}>
+        <h2 style={{ margin: 0 }}>🔔 طلبات بانتظار المراجعة <span className="badge gold" style={{ fontSize: 16, padding: '4px 14px' }}>{pending.length}</span></h2>
+        <button className="btn ghost small" type="button" onClick={load}>🔄 تحديث</button>
+      </div>
       {pending.length === 0 && <p className="muted">لا طلبات معلّقة حاليًا.</p>}
       {pending.map((r) => (
         <div key={r.id} className="card">

@@ -36,7 +36,7 @@ function fillComposer(el, text) {
     el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
   }
   // تنبيه بصري صغير للمستخدم أن النص جاهز وأن النشر بحسابه هو.
-  el.style.outline = '3px solid #7c3aed';
+  el.style.outline = '3px solid #e8b64c';
   el.style.outlineOffset = '2px';
 }
 

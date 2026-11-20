@@ -1,12 +1,12 @@
 * { box-sizing: border-box; }
 :root {
-  --bg: #0f0a1e; --bg2: #171029; --card: #1e1436; --card2: #251a44;
-  --text: #f3efff; --muted: #b8aed6; --gold: #e8b64c; --gold2: #f5d78a;
-  --violet: #8b5cf6; --violet2: #a78bfa; --green: #34d399; --red: #f87171;
+  --bg: #171009; --bg2: #1e150a; --card: #241a0f; --card2: #2e2212;
+  --text: #fdf6e9; --muted: #c9b48a; --gold: #e8b64c; --gold2: #f5d78a;
+  --accent: #e8b64c; --accent2: #f5d78a; --green: #34d399; --red: #f87171;
   --border: rgba(255,255,255,.12); --radius: 16px;
 }
 html { direction: rtl; }
-body { margin: 0; background: linear-gradient(180deg, var(--bg), #120a24 60%, #0d0718); color: var(--text); font-family: 'Segoe UI', Tahoma, Arial, sans-serif; min-height: 100vh; }
+body { margin: 0; background: linear-gradient(180deg, var(--bg), #1a1206 60%, #120c05); color: var(--text); font-family: 'Segoe UI', Tahoma, Arial, sans-serif; min-height: 100vh; }
 a { color: var(--gold2); }
 h1, h2, h3 { margin: 0 0 8px; }
 p { color: var(--muted); line-height: 1.8; }
@@ -19,7 +19,7 @@ input, textarea, select { font-family: inherit; }
 .nav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .nav a, .nav button { color: var(--text); text-decoration: none; background: rgba(255,255,255,.06); border: 1px solid var(--border); padding: 8px 14px; border-radius: 999px; font-size: 14px; }
 .nav a:hover { border-color: var(--gold); }
-.btn { background: linear-gradient(135deg, var(--violet), #6d28d9); color: #fff; border: none; padding: 12px 22px; border-radius: 12px; font-size: 16px; font-weight: 700; }
+.btn { background: linear-gradient(135deg, var(--gold), #b45309); color: #231303; border: none; padding: 12px 22px; border-radius: 12px; font-size: 16px; font-weight: 700; }
 .btn:hover { filter: brightness(1.15); }
 .btn.gold { background: linear-gradient(135deg, var(--gold), #b45309); color: #231303; }
 .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
@@ -30,10 +30,10 @@ input, textarea, select { font-family: inherit; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
 .field { margin-bottom: 12px; }
 .field label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
-.field input, .field textarea, .field select { width: 100%; background: #120b26; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 11px 12px; font-size: 15px; }
+.field input, .field textarea, .field select { width: 100%; background: #1a1206; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 11px 12px; font-size: 15px; }
 .field textarea { min-height: 90px; resize: vertical; }
 .editor { width: 100%; min-height: 420px; background: #fffdf6; color: #1f2937; border-radius: 12px; padding: 24px; font-size: 19px; line-height: 2.1; font-family: 'Amiri', Georgia, serif; border: none; }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(139,92,246,.25); color: var(--violet2); border: 1px solid rgba(139,92,246,.4); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(232,182,76,.25); color: var(--gold2); border: 1px solid rgba(232,182,76,.4); }
 .badge.gold { background: rgba(232,182,76,.2); color: var(--gold2); border-color: rgba(232,182,76,.45); }
 .badge.green { background: rgba(52,211,153,.15); color: var(--green); border-color: rgba(52,211,153,.4); }
 .badge.red { background: rgba(248,113,113,.15); color: var(--red); border-color: rgba(248,113,113,.4); }
@@ -48,7 +48,7 @@ input, textarea, select { font-family: inherit; }
 table { width: 100%; border-collapse: collapse; }
 td, th { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: right; font-size: 14px; }
 .progress { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; }
-.progress > div { height: 100%; background: linear-gradient(90deg, var(--gold), var(--violet)); }
+.progress > div { height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold)); }
 @media (max-width: 600px) {
   .container { padding: 16px 12px 64px; }
   .topbar { padding: 12px; gap: 8px; }

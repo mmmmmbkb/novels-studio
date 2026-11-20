@@ -8,7 +8,7 @@ import type { Chapter, Novel, PointsEvent } from '@/lib/types';
 import { countWords, levelFor, POINTS } from '@/lib/points';
 import { GROUP, isFacebookProfileUrl } from '@/lib/facebook';
 
-const COLORS = ['#7c3aed', '#db2777', '#059669', '#d97706', '#2563eb', '#dc2626', '#0d9488'];
+const COLORS = ['#e8b64c', '#d97706', '#b45309', '#92400e', '#c2410c', '#a16207', '#78350f'];
 
 function Cover({ novel, size = 120 }: { novel: Novel; size?: number }) {
   if (novel.coverUrl) return <img src={novel.coverUrl} alt={novel.title} style={{ width: size, height: size * 4 / 3, objectFit: 'cover', borderRadius: 12 }} />;
@@ -272,10 +272,10 @@ function StudioInner() {
                   )}
 
                   {publishText && (
-                    <div className="card" style={{ marginTop: 14, background: '#251a44' }}>
+                    <div className="card" style={{ marginTop: 14, background: '#2e2212' }}>
                       <h3>📣 منشور جاهز للنشر في ميراكس</h3>
                       <p>انشر النص من حسابك أنت، ثم الصق رابط المنشور هنا واضغط «تأكيد النشر» لتسجيل +{POINTS.PUBLISH} نقطة.</p>
-                      <textarea value={publishText} readOnly rows={8} style={{ width: '100%', background: '#120b26', color: '#f3efff', borderRadius: 10, padding: 12 }} />
+                      <textarea value={publishText} readOnly rows={8} style={{ width: '100%', background: '#1a1206', color: '#fdf6e9', borderRadius: 10, padding: 12 }} />
                       <div className="row" style={{ marginTop: 10 }}>
                         <button className="btn small" onClick={() => navigator.clipboard.writeText(publishText)}>📋 نسخ النص</button>
                         <a href={GROUP.url} target="_blank" rel="noreferrer"><button className="btn gold small" type="button">فتح جروب ميراكس ↗</button></a>
@@ -290,8 +290,8 @@ function StudioInner() {
                       <h3>🔄 مزامنة التفاعلات</h3>
                       <p className="muted">افتح منشور الفصل في الجروب، واكتب عدد التفاعلات والتعليقات الحالي. تُحتسب فقط الزيادة عن آخر مزامنة: +{POINTS.REACTION} لكل تفاعل جديد، +{POINTS.COMMENT} لكل تعليق جديد.</p>
                       <div className="row">
-                        <input type="number" min={0} value={syncR} onChange={(e) => setSyncR(e.target.value)} placeholder="التفاعلات" style={{ width: 130, padding: 10, borderRadius: 10, background: '#120b26', color: '#fff', border: '1px solid #444' }} />
-                        <input type="number" min={0} value={syncC} onChange={(e) => setSyncC(e.target.value)} placeholder="التعليقات" style={{ width: 130, padding: 10, borderRadius: 10, background: '#120b26', color: '#fff', border: '1px solid #444' }} />
+                        <input type="number" min={0} value={syncR} onChange={(e) => setSyncR(e.target.value)} placeholder="التفاعلات" style={{ width: 130, padding: 10, borderRadius: 10, background: '#1a1206', color: '#fdf6e9', border: '1px solid #444' }} />
+                        <input type="number" min={0} value={syncC} onChange={(e) => setSyncC(e.target.value)} placeholder="التعليقات" style={{ width: 130, padding: 10, borderRadius: 10, background: '#1a1206', color: '#fdf6e9', border: '1px solid #444' }} />
                         <button className="btn small" onClick={syncEngagement} disabled={busy}>مزامنة</button>
                       </div>
                       <p className="muted">آخر مزامنة: {chapter.lastSyncedReactions || 0} تفاعل · {chapter.lastSyncedComments || 0} تعليق {chapter.fbPostUrl && <>· <a href={chapter.fbPostUrl} target="_blank" rel="noreferrer">فتح المنشور ↗</a></>}</p>

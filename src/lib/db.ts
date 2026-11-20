@@ -246,13 +246,13 @@ class SupabaseDB {
   async listNovels(userId: string): Promise<Novel[]> {
     const { data, error } = await this.sb().from('novels').select('*').eq('user_id', userId).order('updated_at', { ascending: false });
     if (error) throw new Error(error.message);
-    return (data || []).map((r: Record<string, unknown>) => ({ id: String(r.id), userId: String(r.user_id), title: String(r.title), authorName: String(r.author_name), genre: String(r.genre || ''), description: String(r.description || ''), coverUrl: (r.cover_url as string) || null, coverColor: String(r.cover_color || '#7c3aed'), status: (r.status as Novel['status']) || 'draft', createdAt: String(r.created_at), updatedAt: String(r.updated_at) }));
+    return (data || []).map((r: Record<string, unknown>) => ({ id: String(r.id), userId: String(r.user_id), title: String(r.title), authorName: String(r.author_name), genre: String(r.genre || ''), description: String(r.description || ''), coverUrl: (r.cover_url as string) || null, coverColor: String(r.cover_color || '#b45309'), status: (r.status as Novel['status']) || 'draft', createdAt: String(r.created_at), updatedAt: String(r.updated_at) }));
   }
   async createNovel(userId: string, d: Omit<Novel, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Novel> {
     const { data, error } = await this.sb().from('novels').insert({ user_id: userId, title: d.title, author_name: d.authorName, genre: d.genre, description: d.description, cover_url: d.coverUrl || null, cover_color: d.coverColor, status: d.status }).select().single();
     if (error) throw new Error(error.message);
     const r = data as Record<string, unknown>;
-    return { id: String(r.id), userId, title: String(r.title), authorName: String(r.author_name), genre: String(r.genre || ''), description: String(r.description || ''), coverUrl: (r.cover_url as string) || null, coverColor: String(r.cover_color || '#7c3aed'), status: (r.status as Novel['status']) || 'draft', createdAt: String(r.created_at), updatedAt: String(r.updated_at) };
+    return { id: String(r.id), userId, title: String(r.title), authorName: String(r.author_name), genre: String(r.genre || ''), description: String(r.description || ''), coverUrl: (r.cover_url as string) || null, coverColor: String(r.cover_color || '#b45309'), status: (r.status as Novel['status']) || 'draft', createdAt: String(r.created_at), updatedAt: String(r.updated_at) };
   }
   async updateNovel(id: string, patch: Partial<Novel>): Promise<void> {
     const dbPatch: Record<string, unknown> = {};

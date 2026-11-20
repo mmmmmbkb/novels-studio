@@ -125,7 +125,7 @@
     } else {
       composer.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
     }
-    composer.style.outline = '3px solid #7c3aed';
+    composer.style.outline = '3px solid #e8b64c';
     composer.style.outlineOffset = '2px';
     showBanner('✅ استوديو الروايات: تم ملء نص الفصل. راجعه جيدًا، ثم اضغط «نشر» بنفسك داخل فيسبوك — النشر سيتم بحسابك أنت، وليس بحساب الأدمن.', true);
     emitStatus('filled', 'تم ملء النص في كاتب البوست — بانتظار ضغط المستخدم على نشر.');

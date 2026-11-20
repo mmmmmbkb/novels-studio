@@ -1,0 +1,36 @@
+name: Extract novels-studio v6
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract v6 zip over repo root
+        run: |
+          set -e
+          ls -la
+          test -f novels-studio-v6.zip
+          mkdir -p /tmp/v6
+          unzip -o novels-studio-v6.zip -d /tmp/v6
+          SRC=/tmp/v6
+          COUNT=$(ls -1 "$SRC" | wc -l)
+          FIRST=$(ls -1 "$SRC" | head -n 1)
+          if [ "$COUNT" = "1" ] && [ -d "$SRC/$FIRST" ]; then SRC="$SRC/$FIRST"; fi
+          echo "Source: $SRC"
+          ls -la "$SRC"
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -a "$SRC"/. .
+          rm -f novels-studio-v6.zip
+          rm -rf .github
+          ls -la
+      - name: Commit v6 contents
+        run: |
+          git config user.name "mmmmmbkb"
+          git config user.email "mmmmmbkb@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "Replace contents with novels-studio v6" || echo "No changes to commit"
+          git push

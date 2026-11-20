@@ -253,6 +253,32 @@ class SupabaseDB {
     const sb = this.sb();
     const { data } = await sb.auth.getSession();
     const user = data.session?.user; if (!user) return null;
+    // القراءة من الخادم أولًا (/api/me عبر service role يتجاوز RLS)،
+    // حتى يصل الدور الحقيقي (role) من قاعدة البيانات؛ فالقراءة المباشرة
+    // من المتصفح عبر عميل anon قد لا تعيد الصف أو تعيد دورًا لا يطابق
+    // المخزّن فعلًا (كما حدث مع حساب أدمن ظهر «عضو» في الواجهة).
+    try {
+      const token = data.session.access_token;
+      if (token) {
+        const res = await fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const body = await res.json() as { profile?: Record<string, unknown> };
+          const p = body.profile;
+          if (p && p.id) {
+            return {
+              id: String(p.id), email: String(p.email || user.email || ''),
+              name: String(p.name || (user.user_metadata?.name as string) || user.email || 'كاتب'),
+              facebookId: (p.facebookId as string) || null,
+              facebookUrl: (p.facebookUrl as string) || null,
+              facebookName: (p.facebookName as string) || null,
+              membershipStatus: (p.membershipStatus as Profile['membershipStatus']) || 'none',
+              role: (p.role as 'admin' | 'member') || 'member',
+              points: Number(p.points || 0), createdAt: String(p.createdAt || ''),
+            };
+          }
+        }
+      }
+    } catch { /* رجوع للقراءة المباشرة أدناه */ }
     const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
     if (!prof) return { id: user.id, email: user.email || '', name: (user.user_metadata?.name as string) || user.email || 'كاتب', membershipStatus: 'none', role: 'member', points: 0, createdAt: now() };
     return rowToProfile(prof as Record<string, unknown>);

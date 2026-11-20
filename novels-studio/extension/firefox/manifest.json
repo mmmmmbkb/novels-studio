@@ -1,0 +1,66 @@
+{
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": {
+      "128": "icons/icon128.png",
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_popup": "popup.html",
+    "default_title": "استوديو الروايات — ناشر ميراكس"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "novels-studio-mirax@novels-studio.local",
+      "strict_min_version": "120.0"
+    },
+    "gecko_android": {
+      "strict_min_version": "120.0"
+    }
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "content-facebook.js"
+      ],
+      "matches": [
+        "https://www.facebook.com/groups/918194596679289/*",
+        "https://www.facebook.com/groups/918194596679289",
+        "https://web.facebook.com/groups/918194596679289/*",
+        "https://web.facebook.com/groups/918194596679289"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "js": [
+        "content-webapp.js"
+      ],
+      "matches": [
+        "http://localhost:3000/*",
+        "http://localhost:3100/*",
+        "https://*.vercel.app/*"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "description": "نشر فصول استوديو الروايات في جروب MIRAX NOVELS من حساب فيسبوك الخاص بك أنت — النشر يتم بحسابك أنت، من جلسة متصفحك المسجّل دخول فيها، بدون توكن مشترك وبدون نشر بالنيابة عن الأدمن. نسخة Firefox (تعمل على أندرويد).",
+  "icons": {
+    "128": "icons/icon128.png",
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png"
+  },
+  "manifest_version": 2,
+  "name": "استوديو الروايات — ناشر ميراكس (Firefox)",
+  "permissions": [
+    "storage",
+    "tabs",
+    "https://www.facebook.com/*",
+    "https://web.facebook.com/*"
+  ],
+  "version": "1.0.0"
+}

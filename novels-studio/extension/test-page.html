@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>اختبار تدفق رسائل إضافة استوديو الروايات (محلي فقط)</title>
+<style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 16px;line-height:1.9}pre{background:#111;color:#0f0;padding:12px;border-radius:8px;direction:ltr;text-align:left;overflow:auto}button{padding:10px 16px;font-size:15px;cursor:pointer}</style>
+</head>
+<body>
+<h1>🧪 صفحة تجريبية — تدفق رسائل الإضافة (محلية فقط)</h1>
+<p><strong>هذه الصفحة لا تنشر شيئًا في فيسبوك ولا تفتح الجروب.</strong>
+هدفها فقط اختبار أن صفحة الاستوديو ترسل حدث <code>novels-studio:publish-request</code>
+وأن الإضافة (content-webapp.js) تستقبله وترد بحالة عبر <code>novels-studio:extension-status</code>.
+لتشغيلها فعليًا مع الإضافة: افتحها من نفس نطاق الموقع (localhost) بعد تثبيت الإضافة،
+أو استخدم محاكي الـ <code>chrome.runtime</code> المضمّن أدناه عند غياب الإضافة.</p>
+
+<button id="send">إرسال طلب نشر تجريبي</button>
+<button id="send2">إرسال طلب ثانٍ فورًا (اختبار فاصل 60 ثانية)</button>
+<pre id="log">— السجل —</pre>
+
+<script>
+// محاكي مبسط لمنطق background.js (فاصل 60 ثانية) — للاختبار المحلي فقط.
+const MIN_INTERVAL_MS = 60000;
+let lastPublishAt = 0;
+function fakeBackground(payload) {
+  if (!payload?.text?.trim()) return { ok: false, error: 'لا يوجد نص' };
+  const elapsed = Date.now() - lastPublishAt;
+  if (elapsed < MIN_INTERVAL_MS) return { ok: false, error: 'انتظر ' + Math.ceil((MIN_INTERVAL_MS - elapsed) / 1000) + ' ثانية قبل النشر التالي', waitSec: Math.ceil((MIN_INTERVAL_MS - elapsed) / 1000) };
+  lastPublishAt = Date.now();
+  return { ok: true, message: 'تم فتح الجروب وسيُملأ النص — اضغط «نشر» بنفسك داخل فيسبوك من حسابك أنت.' };
+}
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += '\n' + new Date().toLocaleTimeString('ar-EG') + ' — ' + msg;
+}
+const payload = {
+  novelTitle: 'رواية تجريبية', chapterTitle: 'الفصل 1', authorName: 'كاتب تجريبي',
+  chapterId: 'test-1', novelId: 'test-novel',
+  text: '📖 رواية تجريبية — الفصل 1\n✍️ بقلم: كاتب تجريبي\n\nهذا نص تجريبي محلي فقط — لن يُنشر في أي مكان.\n\n#ميراكس_للروايات',
+};
+document.getElementById('send').onclick = () => {
+  log('إرسال حدث novels-studio:publish-request …');
+  window.dispatchEvent(new CustomEvent('novels-studio:publish-request', { detail: payload }));
+  // عند غياب الإضافة (لا يوجد content-webapp.js هنا)، استخدم المحاكي:
+  if (!document.documentElement.hasAttribute('data-novels-extension')) {
+    log('الإضافة غير مثبتة على هذه الصفحة — استخدام محاكي background: ' + JSON.stringify(fakeBackground(payload)));
+  }
+};
+document.getElementById('send2').onclick = () => {
+  log('طلب ثانٍ فورًا (يجب أن يُرفض بفاصل 60 ثانية): ' + JSON.stringify(fakeBackground(payload)));
+};
+window.addEventListener('novels-studio:extension-status', (e) => log('رد الإضافة: ' + JSON.stringify(e.detail)));
+window.addEventListener('novels-studio:extension-ready', () => log('الإضافة موجودة على الصفحة ✅'));
+log('الصفحة جاهزة. الإضافة مثبتة هنا؟ ' + (document.documentElement.hasAttribute('data-novels-extension') ? 'نعم' : 'لا (سيُستخدم المحاكي)'));
+</script>
+</body>
+</html>
